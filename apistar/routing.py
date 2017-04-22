@@ -137,7 +137,7 @@ class Router(object):
         return (view, pipeline, kwargs)
 
 
-def exception_handler(environ: wsgi.WSGIEnviron, exc: Exception) -> http.Response:
+def exception_handler(environ: wsgi.WSGIEnviron, exc: Exception, settings: Settings) -> http.Response:
     if isinstance(exc, exceptions.APIException):
         return http.Response({'message': exc.message}, exc.status_code)
 
