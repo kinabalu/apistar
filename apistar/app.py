@@ -4,8 +4,7 @@ from typing import Any, Callable, Dict, List
 
 import click
 
-from apistar import commands, pipelines, routing, schema
-
+from apistar import commands, http, pipelines, routing, schema
 
 DEFAULT_LOOKUP_CACHE_SIZE = 10000
 
@@ -44,9 +43,9 @@ class App(object):
         self.click = get_click_client(app=self)
 
 
-def get_wsgi_server(app):
+def get_wsgi_server(app: App) -> Callable:
     lookup = app.router.lookup
-    lookup_cache = OrderedDict()  # FIFO Cache for URL lookups.
+    lookup_cache = OrderedDict()  # type: OrderedDict # FIFO Cache for URL lookups.
     lookup_cache_size = app.settings.get(
         ['ROUTING', 'LOOKUP_CACHE_SIZE'],
         DEFAULT_LOOKUP_CACHE_SIZE
@@ -59,7 +58,7 @@ def get_wsgi_server(app):
             key = method.upper() + ' ' + path
             lookup_cache[key] = lookup(path, method)
 
-    def func(environ, start_response):
+    def func(environ: http.WSGIEnviron, start_response: Callable) -> Callable:
         method = environ['REQUEST_METHOD']
         path = environ['PATH_INFO']
         lookup_key = method + ' ' + path
@@ -102,11 +101,11 @@ def get_wsgi_server(app):
     return func
 
 
-def get_click_client(app):
+def get_click_client(app: App) -> Callable:
     @click.group(invoke_without_command=True, help='API Star')
     @click.option('--version', is_flag=True, help='Display the `apistar` version number.')
     @click.pass_context
-    def client(ctx, version):
+    def client(ctx: click.core.Context, version: bool) -> None:
         if ctx.invoked_subcommand is not None:
             return
 
